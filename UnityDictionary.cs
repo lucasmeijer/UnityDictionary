@@ -9,11 +9,11 @@ using System;
 [Serializable]
 public class UnityDictionary<TKey,TValue> : IDictionary<TKey, TValue>
 {
-	[SerializeField]
-	private	List<TKey> _keys = new List<TKey>();
+    [SerializeField]
+    private List<TKey> _keys = new List<TKey>();
 	
-	[SerializeField]
-	private	List<TValue> _values = new List<TValue>();
+    [SerializeField]
+    private List<TValue> _values = new List<TValue>();
 
     // _cache maps keys to list indices; this allows us to do stuff
     // like Remove() as O(1), instead of O(n)
