@@ -29,9 +29,9 @@ public class UnityDictionary<TKey,TValue> : IDictionary<TKey, TValue>
     {
         BuildCacheIfNeeded();
 
-		_cache.Add(key, _keys.Count);
-		_keys.Add(key);
-		_values.Add(value);
+        _cache.Add(key, _keys.Count);
+        _keys.Add(key);
+        _values.Add(value);
     }
 
     public bool Remove(TKey key)
