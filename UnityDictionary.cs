@@ -15,8 +15,8 @@ public class UnityDictionary<TKey,TValue> : IDictionary<TKey, TValue>
 	[SerializeField]
 	private	List<TValue> _values = new List<TValue>();
 
-    // _cache maps keys to list index entries; this allows us to do stuff
-    // like implementing Remove() as O(1), instead of O(n)
+    // _cache maps keys to list indices; this allows us to do stuff
+    // like Remove() as O(1), instead of O(n)
 	private Dictionary<TKey, int> _cache;
 
     public bool ContainsKey(TKey key)
@@ -253,23 +253,3 @@ public class UnityDictionary<TKey,TValue> : IDictionary<TKey, TValue>
 //Unfortunately, Unity currently doesn't serialize UnityDictionary<int,string>, but it will serialize a dummy subclass of that.
 [Serializable]
 public class UnityDictionaryIntString : UnityDictionary<int,string> {}
-
-
-/*
-//TODO: implement the propertydrawer, and figure out how to make it so you dont need to have one per dummy subclass.
-#if UNITY_EDITOR
-
-[CustomPropertyDrawer(typeof(UnityDictionaryIntString))]
-public class UnityDictionaryDrawer : PropertyDrawer {
-	
-	override public void OnGUI(Rect position, SerializedProperty property, GUIContent label)
-	{
-		EditorGUI.BeginProperty (position, label, property);
-		
-		//todo: put nice drawing code here
-		
-		EditorGUI.EndProperty ();
-	}
-}
-#endif
-*/
