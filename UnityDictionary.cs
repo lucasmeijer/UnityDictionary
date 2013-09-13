@@ -26,6 +26,9 @@ public class UnityDictionary<TKey,TValue> : IDictionary<TKey, TValue>
     {
         BuildCacheIfNeeded();
 
+        // Add to the cache before adding to the key/value lists
+        // That way, duplicate or null keys get caught before we
+        // modify anything permanently.
         _cache.Add(key, _keys.Count);
         _keys.Add(key);
         _values.Add(value);
