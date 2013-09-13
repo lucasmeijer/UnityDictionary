@@ -47,16 +47,22 @@ public class UnityDictionary<TKey,TValue> : IDictionary<TKey, TValue>
         return true;
     }
 
+    // Private method for removing the key/value pair at a particular index
+    // This should never be public; dictionaries aren't supposed to have any
+    // ordering on their elements, so the idea of an element at a particular
+    // index isn't valid in the outside world. That we're using indexable
+    // lists for storing keys/values is an implementation detail.
     private void RemoveAt(int index)
     {
         if(_keys.Count > 1)
         {
-            // Copy the final key/value into this index and update the cache
+            // Copy the final key/value into this index and update the cache if it exists
             _keys[index] = _keys[_keys.Count - 1];
             _values[index] = _values[_values.Count - 1];
-            _cache[_keys[index]] = index;
+            if(_cache != null) _cache[_keys[index]] = index;
         }
 
+        // Truncate the lists
         _keys.RemoveAt(_keys.Count - 1);
         _values.RemoveAt(_values.Count - 1);
     }
