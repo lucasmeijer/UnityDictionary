@@ -376,7 +376,7 @@ public class UnityDictionary<TKey,TValue> : IDictionary<TKey, TValue>, IDictiona
             throw new ArgumentOutOfRangeException("index");
         if (array.Length - index < Count)
             throw new ArgumentException("The provided array is too small.");
-        if(!(array is KeyValuePair<TKey, TValue>[]) && !(array is DictionaryEntry[]))
+        if(!(array is KeyValuePair<TKey, TValue>[]) && !(array is DictionaryEntry[]) && !(array is object[]))
             throw new ArgumentException("The array is not of the appropriate type.");
 
         if(array is DictionaryEntry[])
