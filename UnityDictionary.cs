@@ -26,13 +26,13 @@ public class UnityDictionary<TKey,TValue> : IDictionary<TKey, TValue>
     }
 
     public void Add(TKey key, TValue value)
-	{
+    {
         BuildCacheIfNeeded();
 
 		_cache.Add(key, _keys.Count);
 		_keys.Add(key);
 		_values.Add(value);
-	}
+    }
 
     public bool Remove(TKey key)
     {
