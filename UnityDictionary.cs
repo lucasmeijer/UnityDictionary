@@ -235,6 +235,24 @@ public class UnityDictionary<TKey,TValue> : IDictionary<TKey, TValue>, IDictiona
         #endregion
     }
 
+    [Serializable]
+    private class NonGenericEnumerator : IDictionaryEnumerator
+    {
+        private readonly Enumerator _e;
+        public NonGenericEnumerator(Enumerator e) { _e = e; }
+
+        // Map .Current to .Entry for the sake of old nongeneric clients that don't
+        // are expecting DictionaryEntry instead of KeyValuePair<TKey, TValue>
+        public object Current { get { return Entry; } }
+
+        public bool MoveNext() { return _e.MoveNext(); }
+        public void Reset() { _e.Reset(); }
+
+        public DictionaryEntry Entry { get { return _e.Entry; } }
+        public object Key { get { return _e.Current.Key; } }
+        public object Value { get { return _e.Current.Value; } }
+    }
+
     public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
     {
         return new Enumerator(this);
@@ -285,7 +303,7 @@ public class UnityDictionary<TKey,TValue> : IDictionary<TKey, TValue>, IDictiona
 
     IDictionaryEnumerator IDictionary.GetEnumerator()
     {
-        return new Enumerator(this);
+        return new NonGenericEnumerator(new Enumerator(this));
     }
 
     #endregion
