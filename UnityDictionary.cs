@@ -296,7 +296,10 @@ public class UnityDictionary<TKey,TValue> : IDictionary<TKey, TValue>, IDictiona
         T result;
         try
         {
-            result = (T)obj;
+            if (obj == null)
+                result = default(T);
+            else
+                result = (T)obj;
         }
         catch (InvalidCastException)
         {
