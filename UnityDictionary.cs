@@ -311,10 +311,12 @@ public class UnityDictionary<TKey,TValue> : IDictionary<TKey, TValue>, IDictiona
         T result;
         try
         {
-            if (obj == null)
+            if (obj != null)
+                result = (T)obj;
+            else if (!typeof(T).IsValueType)
                 result = default(T);
             else
-                result = (T)obj;
+                throw new ArgumentException();
         }
         catch (InvalidCastException)
         {
