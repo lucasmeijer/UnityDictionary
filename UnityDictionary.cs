@@ -18,7 +18,7 @@ public class UnityDictionary<TKey,TValue>
 
 	public void Add(TKey key, TValue value)
 	{
-		if (_cache != null)
+		if (_cache == null)
 			BuildCache();
 
 		_cache.Add(key,value);
@@ -29,7 +29,7 @@ public class UnityDictionary<TKey,TValue>
 	public TValue this[TKey key]
 	{
 		get {
-			if (_cache != null)
+			if (_cache == null)
 				BuildCache();
 			
 			return _cache[key];
