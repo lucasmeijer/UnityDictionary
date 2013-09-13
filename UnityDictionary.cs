@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Runtime.Serialization;
 using UnityEngine;
 using System.Collections.Generic;
 using System;
@@ -11,6 +12,8 @@ public class UnityDictionary<TKey,TValue> : IDictionary<TKey, TValue>, IDictiona
 	
     [SerializeField]
     private List<TValue> _values = new List<TValue>();
+
+    private int _version = 0;
 
     public UnityDictionary()
     {
@@ -42,6 +45,7 @@ public class UnityDictionary<TKey,TValue> : IDictionary<TKey, TValue>, IDictiona
         _cache.Add(key, _keys.Count);
         _keys.Add(key);
         _values.Add(value);
+        ++_version;
     }
 
     public bool Remove(TKey key)
@@ -77,6 +81,8 @@ public class UnityDictionary<TKey,TValue> : IDictionary<TKey, TValue>, IDictiona
         // Truncate the lists
         _keys.RemoveAt(_keys.Count - 1);
         _values.RemoveAt(_values.Count - 1);
+
+        ++_version;
     }
 
     public bool TryGetValue(TKey key, out TValue value)
@@ -120,6 +126,7 @@ public class UnityDictionary<TKey,TValue> : IDictionary<TKey, TValue>, IDictiona
             {
                 // The key is already in the dictionary, just update it
                 _values[index] = value;
+                ++_version;
             }
         }
     }
@@ -166,10 +173,12 @@ public class UnityDictionary<TKey,TValue> : IDictionary<TKey, TValue>, IDictiona
 
         private int _index = -1;
         private readonly UnityDictionary<TKey, TValue> _dict;
+        private readonly int _initialVersion;
 
         public Enumerator(UnityDictionary<TKey, TValue> dict)
         {
             _dict = dict;
+            _initialVersion = dict._version;
             Reset();
         }
 
@@ -177,6 +186,8 @@ public class UnityDictionary<TKey,TValue> : IDictionary<TKey, TValue>, IDictiona
 
         public bool MoveNext()
         {
+            if(_dict._version != _initialVersion)
+                throw new InvalidOperationException("The dictionary was modified while enumerating.");
             ++_index;
             return _index < _dict.Count;
         }
@@ -188,7 +199,10 @@ public class UnityDictionary<TKey,TValue> : IDictionary<TKey, TValue>, IDictiona
 
         public KeyValuePair<TKey, TValue> Current
         {
-            get { 
+            get {
+                if (_dict._version != _initialVersion)
+                    throw new InvalidOperationException("The dictionary was modified while enumerating.");
+
                 if(_index < 0 || _index >= _dict.Count) throw new InvalidOperationException();
                 return new KeyValuePair<TKey, TValue>(_dict._keys[_index], _dict._values[_index]);
             }
@@ -259,6 +273,7 @@ public class UnityDictionary<TKey,TValue> : IDictionary<TKey, TValue>, IDictiona
                 TValue tV = ConvertObjectValHelper<TValue>(value);
                 int index = (int)((IDictionary)_cache)[key];
                 _values[index] = tV;
+                ++_version;
             }
         }
     }
@@ -327,6 +342,8 @@ public class UnityDictionary<TKey,TValue> : IDictionary<TKey, TValue>, IDictiona
             _cache = new Dictionary<TKey, int>();
         else
             _cache.Clear();
+
+        ++_version;
     }
 
     public bool Contains(KeyValuePair<TKey, TValue> item)
