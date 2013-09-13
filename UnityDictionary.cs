@@ -64,6 +64,8 @@ public class UnityDictionary<TKey,TValue> : IDictionary<TKey, TValue>, IDictiona
     // lists for storing keys/values is an implementation detail.
     private void RemoveAt(int index)
     {
+        if (_cache != null) _cache.Remove(_keys[index]);
+
         if(_keys.Count > 1)
         {
             // Copy the final key/value into this index and update the cache if it exists
