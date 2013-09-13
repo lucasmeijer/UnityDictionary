@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
-internal class ReadOnlyListWrapper<T> : ICollection<T>
+internal class ReadOnlyListWrapper<T> : ICollection<T>, ICollection
 {
     private readonly List<T> _wrappedList;
 
@@ -52,9 +52,24 @@ internal class ReadOnlyListWrapper<T> : ICollection<T>
         throw new NotSupportedException("The list is read-only.");
     }
 
+    public void CopyTo(Array array, int index)
+    {
+        ((ICollection)_wrappedList).CopyTo(array, index);
+    }
+
     public int Count
     {
         get { return _wrappedList.Count; }
+    }
+
+    public object SyncRoot
+    {
+        get { return ((ICollection) _wrappedList).SyncRoot; }
+    }
+
+    public bool IsSynchronized
+    {
+        get { return ((ICollection) _wrappedList).IsSynchronized; }
     }
 
     public bool IsReadOnly

@@ -4,13 +4,23 @@ using System.Collections.Generic;
 using System;
 
 [Serializable]
-public class UnityDictionary<TKey,TValue> : IDictionary<TKey, TValue>
+public class UnityDictionary<TKey,TValue> : IDictionary<TKey, TValue>, IDictionary
 {
     [SerializeField]
     private List<TKey> _keys = new List<TKey>();
 	
     [SerializeField]
     private List<TValue> _values = new List<TValue>();
+
+    public UnityDictionary()
+    {
+    }
+
+    public UnityDictionary(int capacity)
+    {
+        _keys.Capacity = capacity;
+        _values.Capacity = capacity;
+    }
 
     // _cache maps keys to list indices; this allows us to do stuff
     // like Remove() as O(1), instead of O(n)
@@ -122,6 +132,16 @@ public class UnityDictionary<TKey,TValue> : IDictionary<TKey, TValue>
         get { return new ReadOnlyListWrapper<TValue>(_values); }
     }
 
+    ICollection IDictionary.Keys
+    {
+        get { return new ReadOnlyListWrapper<TKey>(_keys); }
+    }
+
+    ICollection IDictionary.Values
+    {
+        get { return new ReadOnlyListWrapper<TValue>(_values); }
+    }
+
     void BuildCacheIfNeeded()
     {
         if(_cache == null) BuildCache();
@@ -138,7 +158,7 @@ public class UnityDictionary<TKey,TValue> : IDictionary<TKey, TValue>
 
     #region Implementation of IEnumerable
 
-    private class Enumerator : IEnumerator<KeyValuePair<TKey, TValue>>
+    private class Enumerator : IEnumerator<KeyValuePair<TKey, TValue>>, IDictionaryEnumerator
     {
         public void Dispose() { }
 
@@ -178,6 +198,25 @@ public class UnityDictionary<TKey,TValue> : IDictionary<TKey, TValue>
         }
 
         #endregion
+
+        #region Implementation of IDictionaryEnumerator
+
+        public object Key
+        {
+            get { return Current.Key; }
+        }
+
+        public object Value
+        {
+            get { return Current.Value; }
+        }
+
+        public DictionaryEntry Entry
+        {
+            get { return new DictionaryEntry(Current.Key, Current.Value); }
+        }
+
+        #endregion
     }
 
     public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
@@ -185,9 +224,51 @@ public class UnityDictionary<TKey,TValue> : IDictionary<TKey, TValue>
         return new Enumerator(this);
     }
 
+    public void Remove(object key)
+    {
+        if(key == null) throw new ArgumentNullException("key");
+
+        BuildCacheIfNeeded();
+        if (!((IDictionary)_cache).Contains(key))
+            return;
+
+        int index = (int) ((IDictionary) _cache)[key];
+        RemoveAt(index);
+    }
+
+    object IDictionary.this[object key]
+    {
+        get {
+            if (key == null) throw new ArgumentNullException("key");
+            BuildCacheIfNeeded();
+            if (!((IDictionary)_cache).Contains(key)) return null;
+            int index = (int) ((IDictionary) _cache)[key];
+            return _values[index];
+        }
+        set {
+            if (key == null) throw new ArgumentNullException("key");
+            BuildCacheIfNeeded();
+            if (!((IDictionary)_cache).Contains(key))
+            {
+                Add(key, value);
+            }
+            else
+            {
+                TValue tV = ConvertObjectValHelper<TValue>(value);
+                int index = (int)((IDictionary)_cache)[key];
+                _values[index] = tV;
+            }
+        }
+    }
+
     IEnumerator IEnumerable.GetEnumerator()
     {
         return GetEnumerator();
+    }
+
+    IDictionaryEnumerator IDictionary.GetEnumerator()
+    {
+        return new Enumerator(this);
     }
 
     #endregion
@@ -197,6 +278,39 @@ public class UnityDictionary<TKey,TValue> : IDictionary<TKey, TValue>
     public void Add(KeyValuePair<TKey, TValue> item)
     {
         Add(item.Key, item.Value);
+    }
+
+    public bool Contains(object key)
+    {
+        if(key == null)
+            throw new ArgumentNullException("key");
+
+        BuildCacheIfNeeded();
+        return ((IDictionary) _cache).Contains(key);
+    }
+
+    private static T ConvertObjectValHelper<T>(object obj)
+    {
+        T result;
+        try
+        {
+            result = (T)obj;
+        }
+        catch (InvalidCastException)
+        {
+            throw new ArgumentException(string.Format("The value \"{0}\" is not of type \"{1}\" and cannot be used in this generic collection.", obj, typeof(T).FullName));
+        }
+        return result;
+    }
+
+    public void Add(object key, object value)
+    {
+        if(key == null) throw new ArgumentNullException("key");
+
+        TKey tK = ConvertObjectValHelper<TKey>(key);
+        TValue tV = ConvertObjectValHelper<TValue>(value);
+
+        Add(tK, tV);
     }
 
     public void Clear()
@@ -249,12 +363,54 @@ public class UnityDictionary<TKey,TValue> : IDictionary<TKey, TValue>
         return true;
     }
 
+    public void CopyTo(Array array, int index)
+    {
+        if (array == null)
+            throw new ArgumentNullException("array");
+        if (index < 0)
+            throw new ArgumentOutOfRangeException("index");
+        if (array.Length - index < Count)
+            throw new ArgumentException("The provided array is too small.");
+        if(!(array is KeyValuePair<TKey, TValue>[]) && !(array is DictionaryEntry[]))
+            throw new ArgumentException("The array is not of the appropriate type.");
+
+        if(array is DictionaryEntry[])
+        {
+            for (int i = 0; i < _keys.Count; ++i, ++index)
+            {
+                array.SetValue(new DictionaryEntry(_keys[i], _values[i]), index);
+            }  
+        }
+        else
+        {
+            for (int i = 0; i < _keys.Count; ++i, ++index)
+            {
+                array.SetValue(new KeyValuePair<TKey, TValue>(_keys[i], _values[i]), index);
+            }
+        }
+    }
+
     public int Count
     {
         get { return _keys.Count; }
     }
 
+    public object SyncRoot
+    {
+        get { return this; }
+    }
+
+    public bool IsSynchronized
+    {
+        get { return false; }
+    }
+
     public bool IsReadOnly
+    {
+        get { return false; }
+    }
+
+    public bool IsFixedSize
     {
         get { return false; }
     }
