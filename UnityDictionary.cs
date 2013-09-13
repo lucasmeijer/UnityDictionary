@@ -78,6 +78,12 @@ public class UnityDictionary<TKey,TValue> : IDictionary<TKey, TValue>
 
     TValue IDictionary<TKey, TValue>.this[TKey key]
     {
+        get { return this[key]; }
+        set { this[key] = value; }
+    }
+
+    public TValue this[TKey key]
+    {
         get
         {
             BuildCacheIfNeeded();
@@ -87,7 +93,7 @@ public class UnityDictionary<TKey,TValue> : IDictionary<TKey, TValue>
         {
             BuildCacheIfNeeded();
             int index;
-            if(!_cache.TryGetValue(key, out index))
+            if (!_cache.TryGetValue(key, out index))
             {
                 // This key isn't presently in the dictionary, so add it
                 Add(key, value);
