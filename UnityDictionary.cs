@@ -156,7 +156,7 @@ public class UnityDictionary<TKey,TValue> : IDictionary<TKey, TValue>
         public bool MoveNext()
         {
             ++_index;
-            return _index <= _dict.Count;
+            return _index < _dict.Count;
         }
 
         public void Reset()
